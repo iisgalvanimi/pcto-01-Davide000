@@ -1,6 +1,11 @@
+
 import { Component, OnInit } from '@angular/core';
-import { GEOJSON, GeoFeatureCollection } from './models/geojson.model';
+import { GeoFeatureCollection } from './models/geojson.model';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 import { Marker } from './models/marker.model';
+
+
 
 @Component({
   selector: 'app-root',
@@ -11,72 +16,31 @@ import { Marker } from './models/marker.model';
 export class AppComponent implements OnInit {
   title = 'ang-maps';
   // google maps zoom level
-  zoom: number = 16;
+  zoom: number = 12;
   geoJsonObject: GeoFeatureCollection; //Oggetto che conterrà il vettore di GeoJson
   fillColor: string = "#FF0000";  //Colore delle zone catastali
-  markers: Marker[]=[];  //Vettore con tutti i marker
+  obsGeoData: Observable<GeoFeatureCollection>;
+  lng: number = 9.205331366401035;
+  lat: number = 45.45227445505016;
 
-  lng: number = 9.191158;
-  lat: number = 45.506521;
-
-  constructor() {
-    //Questi dati dovremmo scaricarli dal server, per ora li abbiamo copiati nel file gojson.model.ts
-    this.geoJsonObject = GEOJSON;
-    console.log(this.geoJsonObject); //stampo l'oggetto geoJsonObject sulla console
-    //Provo a visualizzare le coordinate della prima features
-    //console.log(?????); 
+  constructor(public http: HttpClient) {
   }
 
+  prepareData = (data: GeoFeatureCollection) => {
+    this.geoJsonObject = data
+    console.log(this.geoJsonObject)
+  }
 
+  ngOnInit() {
+    this.obsGeoData = this.http.get<GeoFeatureCollection>("https://3000-e45281bb-b2dd-4c17-9cf1-ed00337f766a.ws-eu01.gitpod.io/");
+    this.obsGeoData.subscribe(this.prepareData);
+  }
   styleFunc = (feature) => {
-    console.log(feature.i.id)
-    let newColor = "#FF0000"; //RED
-    if (feature.i.id == 0) newColor = "#00FF00"; //GREEN
-    else newColor = "#0000FF"; //BLUE
     return ({
       clickable: false,
-      fillColor: newColor,
+      fillColor: this.fillColor,
       strokeWeight: 1
     });
   }
 
-  ngOnInit_old() {
-    this.markers = [
-      {
-        //features[0] seleziona il primo geoJson
-        //coordinates[0] ottiene la lista di poligoni.
-        //coordinates[0][0] ottiene il primo (e unico) poligono della lista
-        //coordinates[0][0][0] ottiene la longitudine
-        //coordinates[0][0][1] ottiene la latitudine
-        lng: this.geoJsonObject.features[0].geometry.coordinates[0][0][0],
-        lat: this.geoJsonObject.features[0].geometry.coordinates[0][0][1],
-        label: String(this.geoJsonObject.features[0].properties.id),
-      },
-      {
-        lng: this.geoJsonObject.features[1].geometry.coordinates[0][0][0],
-        lat: this.geoJsonObject.features[1].geometry.coordinates[0][0][1],
-        label: String(this.geoJsonObject.features[1].properties.id),
-      }
-    ]
-  }
-
-
-  ngOnInit() {
-
-    for (let f of this.geoJsonObject.features) {
-      // f ==  this.geoJsonObject.features[0]
-
-      let m = {
-        lng: f.geometry.coordinates[0][0][0],
-        lat: f.geometry.coordinates[0][0][1],
-        label: String(f.properties.id)
-      }
-
-      this.markers.push(m);
-     
-  }
 }
-
-
-
-  }
